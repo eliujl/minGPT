@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>minGPT</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    /* Add your custom CSS styles here */
+  </style>
+</head>
+<body>
+  <h1>min(imum) GPT</h1>
+  <p>The absolute minimum GPT website: enter your OpenAI API key and chat. Only using default settings. Chat history is not used. </p>
+  <p>Enter your OpenAI API Key:</p>
+  <input type="password" id="api_key" placeholder="API Key">
+  <button id="start_chat">Start Chat</button>
+  <div id="chat_container" style="display: none;">
+    <p>Your message:</p>
+    <input type="text" id="user_message" placeholder="Type your message">
+    <button id="send_message">Send</button>
+    <div id="chat_history"></div>
+  </div>
+  <script>
+
+
+	$(document).ready(function() {
+	$('#start_chat').on('click', function() {
+		const apiKey = $('#api_key').val();
+
+		if (apiKey) {
+		$('#chat_container').show();
+		} else {
+		alert('Please enter your API Key.');
+		}
+	});
+
+	$('#send_message').on('click', async function() {
+		const apiKey = $('#api_key').val();
+		const userMessage = $('#user_message').val();
+
+		if (!userMessage) {
+		alert('Please enter a message.');
+		return;
+		}
+
+		const response = await sendMessageToChatGPT(apiKey, userMessage);
+
+		if (response) {
+		const chatGPTMessage = response.choices[0].message.content;
+		displayMessage(userMessage, 'User');
+		displayMessage(chatGPTMessage, 'ChatGPT');
+		$('#user_message').val('');
+		} else {
+		alert('Error: Could not send message.');
+		}
+	});
+	});
+
+	async function sendMessageToChatGPT(apiKey, message) {
+	const response = await fetch('https://api.openai.com/v1/chat/completions', {
+		method: 'POST',
+		headers: {
+		'Content-Type': 'application/json',
+		'Authorization': `Bearer ${apiKey}`
+		},
+		body: JSON.stringify({
+		model: 'gpt-3.5-turbo',
+		messages: [
+			{role: 'system', content: 'You are a helpful assistant.'},
+			{role: 'user', content: message}
+		],
+		max_tokens: 150
+		})
+	});
+
+	if (response.ok) {
+		return await response.json();
+	} else {
+		console.error('Error:', response.status, response.statusText);
+		return null;
+	}
+	}
+
+	function displayMessage(message, sender) {
+	const messageElement = `<p><strong>${sender}:</strong> ${message}</p>`;
+	$('#chat_history').append(messageElement);
+	}
+
+
+  </script>
+</body>
+</html>
+
